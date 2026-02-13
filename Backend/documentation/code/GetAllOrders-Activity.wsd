@@ -1,0 +1,30 @@
+@startuml
+start
+
+:User/Admin sends GET /orders;
+:Authenticate user (auth middleware);
+:Authorize user (allowedTo middleware);
+
+:Run createFilterObject middleware;
+if (user.role == "user") then (yes)
+  :Set req.filterObject = { user: req.user.id };
+else (admin)
+  :Set req.filterObject = {};
+endif
+
+:Call getAll(orderModel, populateOptions);
+
+:Build query:
+  - filter = req.filterObject
+  - apply pagination
+  - apply sorting
+  - apply fields selection
+  - apply search (if exists)
+
+:Execute query on DB:
+  orderModel.find(filter).populate(...)
+
+:Return results with status 200;
+
+stop
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+start
+
+if (ImageCover uploaded?) then (Yes)
+  :Upload new imageCover;
+  :Delete old imageCover;
+endif
+
+if (imagesMode == "replace") then (Replace)
+  :Delete all old images;
+  :Upload new images;
+elseif (imagesMode == "append") then (Append)
+  :Upload additional images;
+elseif (imagesMode == "remove") then (Remove)
+  :Delete selected image;
+endif
+
+:Save product;
+stop
+@enduml

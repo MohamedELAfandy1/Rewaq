@@ -1,0 +1,39 @@
+{
+  "name": "ecommerce",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --watchAll",
+    "start": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.8.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "env": "^0.0.2",
+    "express": "^5.2.1",
+    "express-async-handler": "^1.2.0",
+    "express-bouncer": "^0.2.0",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.0.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.11",
+    "nodemon": "^3.1.11",
+    "passport": "^0.7.0",
+    "passport-facebook": "^3.0.0",
+    "passport-google-oauth20": "^2.0.0",
+    "streamifier": "^0.1.1"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "node-mocks-http": "^1.17.2"
+  }
+}

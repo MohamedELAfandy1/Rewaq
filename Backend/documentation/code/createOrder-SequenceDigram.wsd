@@ -1,0 +1,56 @@
+@startuml
+actor User
+participant Frontend
+participant "Order Route\nPOST /orders" as OrderRoute
+participant "Order Controller\ncreateOrder" as OrderController
+participant "Order Model\n(orderModel)" as OrderModel
+participant "Cart Model\n(cartModel)" as CartModel
+participant "Product Model\n(productModel)" as ProductModel
+
+User -> Frontend : Click "Order Now"
+Frontend -> OrderRoute : POST /orders\n{ detailedAddress, phone, city,\npostalCode, shippingPrice,\npaymentMethod, idempotencyKey }
+
+OrderRoute -> OrderController : createOrder(req)
+
+OrderController -> OrderModel : findOne({idempotencyKey})
+OrderModel --> OrderController : existingOrder?
+
+alt existingOrder found
+    OrderController -> OrderRoute : 200 OK\nOrder already created
+    OrderRoute -> Frontend : response
+else
+    OrderController -> CartModel : findOne({user}).session()
+    CartModel --> OrderController : cart
+
+    alt cart empty
+        OrderController -> OrderRoute : 400 Bad Request\nCart is empty
+        OrderRoute -> Frontend : response
+    else
+        loop for each cartItem
+            OrderController -> ProductModel : findById(item.product).session()
+            ProductModel --> OrderController : product
+
+            alt product quantity < item.quantity
+                OrderController -> OrderRoute : 400 Bad Request\nNot enough stock
+                OrderRoute -> Frontend : response
+                break
+            end
+        end
+
+        OrderController -> OrderModel : create(order).session()
+        OrderModel --> OrderController : order
+
+        loop for each cartItem
+            OrderController -> ProductModel : findByIdAndUpdate(\n{ $inc: { quantity:-item.quantity, sold:+item.quantity } }).session()
+            ProductModel --> OrderController : updated product
+        end
+
+        OrderController -> CartModel : save(cart empty).session()
+        CartModel --> OrderController : saved cart
+
+        OrderController -> OrderRoute : 201 Created\norder
+        OrderRoute -> Frontend : response
+    end
+end
+
+@enduml

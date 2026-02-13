@@ -1,0 +1,46 @@
+@startuml
+actor Admin
+participant "Express Router" as Router
+participant "Auth Middleware" as Auth
+participant "Upload (Multer)" as Upload
+participant "updateProductValidator" as Validator
+participant "updateOne Controller" as Controller
+participant "MongoDB (Product)" as DB
+participant "Cloudinary" as Cloudinary
+
+Admin -> Router : PATCH /products/:id
+Router -> Auth : authenticate & authorize
+Auth --> Router : ok
+
+Router -> Upload : upload images
+Upload --> Router : files in req
+
+Router -> Validator : validate body
+Validator --> Router : valid
+
+Router -> Controller : updateOne()
+
+Controller -> DB : findById(productId)
+DB --> Controller : product document
+
+alt imageCover exists
+  Controller -> Cloudinary : upload imageCover
+  Cloudinary --> Controller : url + public_id
+  Controller -> Cloudinary : delete old imageCover
+end
+
+alt imagesMode = replace
+  Controller -> Cloudinary : delete old images
+  Controller -> Cloudinary : upload new images
+else imagesMode = append
+  Controller -> Cloudinary : upload extra images
+else imagesMode = remove
+  Controller -> Cloudinary : delete image by public_id
+end
+
+Controller -> DB : save document
+DB --> Controller : updated product
+
+Controller --> Router : 200 OK
+Router --> Admin : JSON response
+@enduml

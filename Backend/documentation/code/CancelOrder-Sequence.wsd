@@ -1,0 +1,48 @@
+@startuml
+actor Admin
+participant "Express API" as API
+participant "Order Controller" as Controller
+participant "MongoDB" as DB
+
+Admin -> API : DELETE /orders/:id
+API -> Controller : cancelOrder()
+
+Controller -> DB : startSession()
+Controller -> DB : startTransaction()
+
+Controller -> DB : findById(orderId)
+DB --> Controller : order
+
+alt order not found
+  Controller -> DB : abortTransaction()
+  Controller -> DB : endSession()
+  Controller --> API : 404
+  API --> Admin : response
+else order found
+  alt order.isDelivered
+    Controller -> DB : abortTransaction()
+    Controller -> DB : endSession()
+    Controller --> API : 400 (Delivered cannot be canceled)
+    API --> Admin : response
+  else order not delivered
+    alt order.isCanceled
+      Controller -> DB : abortTransaction()
+      Controller -> DB : endSession()
+      Controller --> API : 400 (Already canceled)
+      API --> Admin : response
+    else not canceled
+      Controller -> DB : update product stock for each item
+      DB --> Controller : updated
+
+      Controller -> DB : update order (isCanceled=true)
+      DB --> Controller : updated order
+
+      Controller -> DB : commitTransaction()
+      Controller -> DB : endSession()
+
+      Controller --> API : 200 (Order canceled)
+      API --> Admin : response
+    end
+  end
+end
+@enduml

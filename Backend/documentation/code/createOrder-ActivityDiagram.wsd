@@ -1,0 +1,60 @@
+@startuml
+start
+
+:User sends create order request;
+:Validate request body;
+if (validation fails?) then (yes)
+  :Return 400 error;
+  stop
+else (no)
+endif
+
+:Start mongoose session;
+:Begin transaction;
+
+:Check existing order by user + idempotencyKey;
+if (order exists?) then (yes)
+  :Abort transaction;
+  :End session;
+  :Return existing order (200);
+  stop
+else (no)
+endif
+
+:Find user cart;
+if (cart empty?) then (yes)
+  :Abort transaction;
+  :End session;
+  :Return "Cart is empty" (400);
+  stop
+else (no)
+endif
+
+:For each cart item:
+  :Check product stock;
+  if (stock insufficient?) then (yes)
+    :Abort transaction;
+    :End session;
+    :Return error (400);
+    stop
+  else (no)
+  endif
+end
+
+:Create order document (snapshot items);
+:Save order in DB;
+
+:For each cart item:
+  :Decrement product quantity;
+  :Increment product sold;
+end
+
+:Clear cart items & total price;
+:Save cart;
+
+:Commit transaction;
+:End session;
+
+:Return created order (201);
+stop
+@enduml
