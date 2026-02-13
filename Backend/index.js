@@ -7,7 +7,7 @@ const globalError = require("./middleware/globalError");
 const cors = require("cors");
 const compression = require("compression");
 const passport = require("passport");
-
+const helmet = require("helmet");
 dotenv.config({ path: ".env" });
 require("./config/passport");
 
